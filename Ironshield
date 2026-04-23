@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IronShield News</title>
+
+<style>
+body { font-family: Arial; margin: 0; background: #f4f4f4; }
+header { background: #111; color: white; padding: 15px; text-align: center; }
+nav { background: #333; padding: 10px; text-align: center; }
+nav button { margin: 5px; padding: 8px 15px; }
+.container { max-width: 800px; margin: auto; padding: 20px; }
+.post { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+input, textarea { width: 100%; padding: 10px; margin: 5px 0; }
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🛡️ IronShield News</h1>
+<p>Truth • Insight • Power</p>
+</header>
+
+<nav>
+<button onclick="showLogin()">Login</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<div class="container">
+
+<div id="loginBox">
+<h2>Login</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button onclick="register()">Register</button>
+</div>
+
+<div id="adminBox" style="display:none;">
+<h2>Post News</h2>
+<input id="title" placeholder="Title">
+<textarea id="content" placeholder="Write news..."></textarea>
+<button onclick="postNews()">Publish</button>
+</div>
+
+<h2>Latest News</h2>
+<div id="newsList"></div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Auth
+function register() {
+  auth.createUserWithEmailAndPassword(
+    email.value, password.value
+  );
+}
+
+function login() {
+  auth.signInWithEmailAndPassword(
+    email.value, password.value
+  );
+}
+
+function logout() {
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+  if(user){
+    adminBox.style.display = "block";
+    loginBox.style.display = "none";
+  } else {
+    adminBox.style.display = "none";
+    loginBox.style.display = "block";
+  }
+});
+
+// Post news
+function postNews(){
+  db.collection("news").add({
+    title: title.value,
+    content: content.value,
+    time: Date.now()
+  });
+}
+
+// Load news
+db.collection("news").orderBy("time","desc")
+.onSnapshot(snapshot => {
+  newsList.innerHTML = "";
+  snapshot.forEach(doc => {
+    let data = doc.data();
+    newsList.innerHTML += `
+      <div class="post">
+        <h3>${data.title}</h3>
+        <p>${data.content}</p>
+      </div>`;
+  });
+});
+</script>
+
+</body>
+</html>
